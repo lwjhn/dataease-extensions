@@ -1,0 +1,13 @@
+{
+    "name":"trino 数据源插件(407)",
+    "free":0,
+    "store":"thirdpart",
+    "cost":0,
+    "category":"datasource",
+    "descript":"trino 插件，值得拥有",
+    "version":"1.18.6",
+    "creator":"DATAEASE",
+    "moduleName":"trino-backend",
+    "require":"1.11.0",
+    "dsType":"trino"
+}

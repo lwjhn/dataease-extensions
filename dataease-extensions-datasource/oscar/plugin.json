@@ -1,0 +1,13 @@
+{
+    "name":"神通数据源插件",
+    "free":0,
+    "store":"V16.0.1",
+    "cost":0,
+    "category":"datasource",
+    "descript":"申通插件，值得拥有",
+    "version":"1.18.6",
+    "creator":"DATAEASE",
+    "moduleName":"oscar-backend",
+    "require":"1.12.0",
+    "dsType":"oscar"
+}
