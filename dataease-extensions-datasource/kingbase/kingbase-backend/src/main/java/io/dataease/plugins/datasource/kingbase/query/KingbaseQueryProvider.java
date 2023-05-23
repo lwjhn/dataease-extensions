@@ -1,6 +1,5 @@
 package io.dataease.plugins.datasource.kingbase.query;
 
-import cn.hutool.json.JSONArray;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
@@ -20,10 +19,10 @@ import io.dataease.plugins.common.dto.sqlObj.SQLObj;
 import io.dataease.plugins.common.request.chart.ChartExtFilterRequest;
 import io.dataease.plugins.common.request.permission.DataSetRowPermissionsTreeDTO;
 import io.dataease.plugins.common.request.permission.DatasetRowPermissionsTreeItem;
-import io.dataease.plugins.datasource.kingbase.provider.KingbaseConfig;
 import io.dataease.plugins.datasource.entity.Dateformat;
 import io.dataease.plugins.datasource.entity.JdbcConfiguration;
 import io.dataease.plugins.datasource.entity.PageInfo;
+import io.dataease.plugins.datasource.kingbase.provider.KingbaseConfig;
 import io.dataease.plugins.datasource.query.QueryProvider;
 import io.dataease.plugins.datasource.query.Utils;
 import org.apache.commons.collections4.CollectionUtils;
@@ -953,7 +952,7 @@ public class KingbaseQueryProvider extends QueryProvider {
      */
     @Override
     public String searchTable(String table) {
-        return "SELECT table_name FROM information_schema.TABLES WHERE table_name ='" + table + "'";
+        return "SELECT TABLE_NAME FROM ALL_TAB_COMMENTS WHERE TABLE_NAME='" + table + "' GROUP BY TABLE_NAME";
     }
 
     @Override

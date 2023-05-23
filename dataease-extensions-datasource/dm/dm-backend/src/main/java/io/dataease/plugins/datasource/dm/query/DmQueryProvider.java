@@ -1,6 +1,5 @@
 package io.dataease.plugins.datasource.dm.query;
 
-import cn.hutool.json.JSONArray;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
@@ -836,7 +835,7 @@ public class DmQueryProvider extends QueryProvider {
 
     @Override
     public String searchTable(String table) {
-        return "SELECT table_name FROM information_schema.TABLES WHERE table_name ='" + table + "'";
+        return "SELECT TABLE_NAME FROM ALL_TAB_COMMENTS WHERE TABLE_NAME='" + table + "' GROUP BY TABLE_NAME";
     }
 
     @Override

@@ -33,7 +33,7 @@ public class OscarService extends DatasourceService {
         List<StaticResource> results = new ArrayList<>();
         StaticResource staticResource = new StaticResource();
         staticResource.setName("oscar");
-        staticResource.setSuffix("png");
+        staticResource.setSuffix("jpg");
         results.add(staticResource);
         results.add(pluginSvg());
         return results;

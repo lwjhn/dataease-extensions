@@ -10,7 +10,7 @@ function resolve (dir) {
 module.exports = {
     mode: 'development',
     entry: {
-    'dm': resolve('/src/views/dm.vue')
+    'oscar': resolve('/src/views/oscar.vue')
   },
   output: {
     path: resolve('/static/'),

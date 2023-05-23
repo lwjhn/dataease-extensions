@@ -835,7 +835,7 @@ public class OscarQueryProvider extends QueryProvider {
 
     @Override
     public String searchTable(String table) {
-        return "SELECT table_name FROM information_schema.TABLES WHERE table_name ='" + table + "'";
+        return "SELECT TABLE_NAME FROM ALL_TAB_COMMENTS WHERE TABLE_NAME='" + table + "' GROUP BY TABLE_NAME";
     }
 
     @Override

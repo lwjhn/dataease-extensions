@@ -16,6 +16,8 @@
         <module>mongo</module>
         <module>kylin</module>
         <module>kingbase</module>
+        <module>oscar</module>
+        <module>trino</module>
     </modules>
 
     <artifactId>dataease-extensions-datasource</artifactId>
