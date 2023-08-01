@@ -952,7 +952,16 @@ public class KingbaseQueryProvider extends QueryProvider {
      */
     @Override
     public String searchTable(String table) {
-        return "SELECT TABLE_NAME FROM ALL_TAB_COMMENTS WHERE TABLE_NAME='" + table + "' GROUP BY TABLE_NAME";
+//        return "SELECT TABLE_NAME FROM ALL_TAB_COMMENTS WHERE TABLE_NAME='" + table + "' GROUP BY TABLE_NAME";
+        return "SELECT    c.relname              AS tablename\n"
+                + "     , obj_description(c.oid) AS comments\n"
+                + "     , n.nspname              AS schema_name\n"
+                + "FROM pg_class c\n"
+                + "         LEFT JOIN pg_namespace n ON n.oid = c.relnamespace\n"
+                + "WHERE ((c.relkind = 'r'::\"char\") OR (c.relkind = 'f'::\"char\") OR (c.relkind = 'p'::\"char\"))\n"
+                + "  AND c.relname = '" + table + "'\n"
+//                + (StringUtils.isNotBlank(table) ? "" : ("  AND n.nspname = '" + table + "'\n"))
+                + "ORDER BY n.nspname, tablename";
     }
 
     @Override

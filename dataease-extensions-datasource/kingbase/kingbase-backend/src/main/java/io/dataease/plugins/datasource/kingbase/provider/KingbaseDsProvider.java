@@ -152,7 +152,7 @@ public class KingbaseDsProvider extends DefaultJdbcProvider {
             DatabaseMetaData databaseMetaData = connection.getMetaData();
             ResultSet resultSet = databaseMetaData.getColumns(null, null, datasourceRequest.getTable(), "%");
             while (resultSet.next()) {
-                String tableName = resultSet.getString("TABLE_NAME").toUpperCase();
+                String tableName = resultSet.getString("TABLE_NAME");
                 String database;
                 database = resultSet.getString("TABLE_CAT");
                 if (database != null) {
@@ -249,8 +249,15 @@ public class KingbaseDsProvider extends DefaultJdbcProvider {
         /*return "select a.table_name, b.comments from all_tables a, user_tab_comments b where a.table_name = b
         .table_name and owner=upper('OWNER') ".replaceAll("OWNER",
                 kingbaseConfig.getSchema());*/
-        return ("select table_name from all_tables where owner=upper('OWNER') ").replaceAll("OWNER",
-                kingbaseConfig.getSchema());
+//        return ("select table_name from all_tables where owner=upper('OWNER') ").replaceAll("OWNER", kingbaseConfig.getSchema());
+        return "SELECT    c.relname              AS tablename\n"
+                + "     , obj_description(c.oid) AS comments\n"
+                + "     , n.nspname              AS schema_name\n"
+                + "FROM pg_class c\n"
+                + "         LEFT JOIN pg_namespace n ON n.oid = c.relnamespace\n"
+                + "WHERE ((c.relkind = 'r'::\"char\") OR (c.relkind = 'f'::\"char\") OR (c.relkind = 'p'::\"char\"))\n"
+                + "  AND n.nspname = '" + kingbaseConfig.getSchema() + "'\n"
+                + "ORDER BY n.nspname, tablename";
     }
 
     /**
@@ -258,7 +265,8 @@ public class KingbaseDsProvider extends DefaultJdbcProvider {
      */
     @Override
     public String getSchemaSql(DatasourceRequest datasourceRequest) {
-        return "select * from all_users";
+//        return "select * from all_users";
+        return "SELECT nspname AS \"schema_name\" FROM pg_namespace WHERE nspname NOT LIKE 'pg_%' AND nspname != 'information_schema' ORDER BY nspname";
     }
 
 }

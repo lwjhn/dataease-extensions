@@ -34,15 +34,23 @@
 
           <el-form-item class="schema-label" :label="$t('schema')">
             <template slot="label">
-          {{ $t("schema") }}
-          <el-button type="text" icon="el-icon-plus" size="small" @click="getSchema()">{{ $t('get_schema') }}
-            </el-button>
-        </template>
-            <el-select v-model="form.configuration.schema" filterable
+              {{ $t("schema") }}
+              <el-button type="text" icon="el-icon-plus" size="small" @click="getSchema()">{{ $t('get_schema') }}
+                </el-button>
+            </template>
+            <el-select v-model="form.configuration.schema" filterable clearable
                        :placeholder="$t('please_select')"
                        class="de-select">
               <el-option v-for="item in schemas" :key="item" :label="item" :value="item"/>
             </el-select>
+          </el-form-item>
+
+          <el-form-item :label="$t('extra_params')" >
+            <el-input
+                v-model="form.configuration.extraParams"
+                :placeholder="$t('fu.search_bar.please_input') + $t('datasource.extra_params')"
+                autocomplete="off"
+            />
           </el-form-item>
 
           <el-form-item  :label="$t('query_timeout')">
@@ -165,10 +173,10 @@ export default {
         }
       })
 
-      if (!this.form.configuration.schema ) {
-        this.$message.error(this.$t('please_choose_schema'))
-        status = false
-      }
+      // if (!this.form.configuration.schema ) {
+      //   this.$message.error(this.$t('please_choose_schema'))
+      //   status = false
+      // }
       return status
     }
   }

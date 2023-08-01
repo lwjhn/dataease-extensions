@@ -36,6 +36,14 @@
             <dePwd :placeholder="$t('input_a_password')" v-model="form.configuration.password" />
           </el-form-item>
 
+          <el-form-item :label="$t('extra_params')" >
+            <el-input
+              v-model="form.configuration.extraParams"
+              :placeholder="$t('fu.search_bar.please_input') + $t('datasource.extra_params')"
+              autocomplete="off"
+            />
+          </el-form-item>
+
           <el-form-item  :label="$t('query_timeout')">
             <el-input
                 v-model="form.configuration.queryTimeout"
