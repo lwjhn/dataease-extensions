@@ -1,4 +1,4 @@
-package io.dataease.plugins.datasource.kingbase.provider;
+package io.dataease.plugins.datasource.trino.provider;
 
 import com.google.gson.Gson;
 import io.dataease.plugins.common.base.domain.DeDriver;
@@ -24,13 +24,13 @@ import java.util.Properties;
 
 
 @Component()
-public class KingbaseDsProvider extends DefaultJdbcProvider {
+public class DmDsProvider extends DefaultJdbcProvider {
     @Resource
     private DeDriverMapper deDriverMapper;
 
     @Override
     public String getType() {
-        return "kingbase";
+        return "dm";
     }
 
     @Override
@@ -38,21 +38,17 @@ public class KingbaseDsProvider extends DefaultJdbcProvider {
         return false;
     }
 
-    /**
-     * 连接数据源
-     */
     @Override
     public Connection getConnection(DatasourceRequest datasourceRequest) throws Exception {
-        KingbaseConfig kingbaseConfig = new Gson().fromJson(datasourceRequest.getDatasource().getConfiguration(),
-                KingbaseConfig.class);
+        DmConfig dmConfig = new Gson().fromJson(datasourceRequest.getDatasource().getConfiguration(), DmConfig.class);
 
-        String defaultDriver = kingbaseConfig.getDriver();
-        String customDriver = kingbaseConfig.getCustomDriver();
+        String defaultDriver = dmConfig.getDriver();
+        String customDriver = dmConfig.getCustomDriver();
 
-        String url = kingbaseConfig.getJdbc();
+        String url = dmConfig.getJdbc();
         Properties props = new Properties();
         DeDriver deDriver = null;
-        if (StringUtils.isNotEmpty(kingbaseConfig.getAuthMethod()) && kingbaseConfig.getAuthMethod().equalsIgnoreCase("kerberos")) {
+        if (StringUtils.isNotEmpty(dmConfig.getAuthMethod()) && dmConfig.getAuthMethod().equalsIgnoreCase("kerberos")) {
             System.setProperty("java.security.krb5.conf", "/opt/dataease/conf/krb5.conf");
             ExtendedJdbcClassLoader classLoader;
             if (isDefaultClassLoader(customDriver)) {
@@ -66,19 +62,16 @@ public class KingbaseDsProvider extends DefaultJdbcProvider {
             Object obj = ConfigurationClass.newInstance();
             set.invoke(obj, "hadoop.security.authentication", "Kerberos");
 
-            Class<?> UserGroupInformationClass = classLoader.loadClass("org.apache.hadoop.security" +
-                    ".UserGroupInformation");
+            Class<?> UserGroupInformationClass = classLoader.loadClass("org.apache.hadoop.security.UserGroupInformation");
             Method setConfiguration = UserGroupInformationClass.getMethod("setConfiguration", ConfigurationClass);
-            Method loginUserFromKeytab = UserGroupInformationClass.getMethod("loginUserFromKeytab", String.class,
-                    String.class);
+            Method loginUserFromKeytab = UserGroupInformationClass.getMethod("loginUserFromKeytab", String.class, String.class);
             setConfiguration.invoke(null, obj);
-            loginUserFromKeytab.invoke(null, kingbaseConfig.getUsername(),
-                    "/opt/dataease/conf/" + kingbaseConfig.getPassword());
+            loginUserFromKeytab.invoke(null, dmConfig.getUsername(), "/opt/dataease/conf/" + dmConfig.getPassword());
         } else {
-            if (StringUtils.isNotBlank(kingbaseConfig.getUsername())) {
-                props.setProperty("user", kingbaseConfig.getUsername());
-                if (StringUtils.isNotBlank(kingbaseConfig.getPassword())) {
-                    props.setProperty("password", kingbaseConfig.getPassword());
+            if (StringUtils.isNotBlank(dmConfig.getUsername())) {
+                props.setProperty("user", dmConfig.getUsername());
+                if (StringUtils.isNotBlank(dmConfig.getPassword())) {
+                    props.setProperty("password", dmConfig.getPassword());
                 }
             }
         }
@@ -111,18 +104,13 @@ public class KingbaseDsProvider extends DefaultJdbcProvider {
         return conn;
     }
 
-    /**
-     * 获取表名称
-     */
     @Override
     public List<TableDesc> getTables(DatasourceRequest datasourceRequest) throws Exception {
         List<TableDesc> tables = new ArrayList<>();
         String queryStr = getTablesSql(datasourceRequest);
-        JdbcConfiguration jdbcConfiguration =
-                new Gson().fromJson(datasourceRequest.getDatasource().getConfiguration(), JdbcConfiguration.class);
-        int queryTimeout = Math.max(jdbcConfiguration.getQueryTimeout(), 0);
-        try (Connection con = getConnectionFromPool(datasourceRequest); Statement statement = getStatement(con,
-                queryTimeout); ResultSet resultSet = statement.executeQuery(queryStr)) {
+        JdbcConfiguration jdbcConfiguration = new Gson().fromJson(datasourceRequest.getDatasource().getConfiguration(), JdbcConfiguration.class);
+        int queryTimeout = jdbcConfiguration.getQueryTimeout() > 0 ? jdbcConfiguration.getQueryTimeout() : 0;
+        try (Connection con = getConnectionFromPool(datasourceRequest); Statement statement = getStatement(con, queryTimeout); ResultSet resultSet = statement.executeQuery(queryStr)) {
             while (resultSet.next()) {
                 tables.add(getTableDesc(datasourceRequest, resultSet));
             }
@@ -133,33 +121,24 @@ public class KingbaseDsProvider extends DefaultJdbcProvider {
         return tables;
     }
 
-    /**
-     * 获取表名称
-     */
     private TableDesc getTableDesc(DatasourceRequest datasourceRequest, ResultSet resultSet) throws SQLException {
         TableDesc tableDesc = new TableDesc();
         tableDesc.setName(resultSet.getString(1));
         return tableDesc;
     }
 
-    /**
-     * 获取表字段信息
-     */
     @Override
     public List<TableField> getTableFields(DatasourceRequest datasourceRequest) throws Exception {
         List<TableField> list = new LinkedList<>();
         try (Connection connection = getConnectionFromPool(datasourceRequest)) {
-            KingbaseConfig kingbaseConfig = new Gson().fromJson(datasourceRequest.getDatasource().getConfiguration(),
-                    KingbaseConfig.class);
             DatabaseMetaData databaseMetaData = connection.getMetaData();
-//            String schema = StringUtils.isBlank(kingbaseConfig.getSchema()) ? null : kingbaseConfig.getSchema();
-            ResultSet resultSet = databaseMetaData.getColumns(null, null, datasourceRequest.getTable(), "%");
+            ResultSet resultSet = databaseMetaData.getColumns(null, "%", datasourceRequest.getTable(), "%");
             while (resultSet.next()) {
                 String tableName = resultSet.getString("TABLE_NAME");
                 String database;
                 database = resultSet.getString("TABLE_CAT");
                 if (database != null) {
-                    if (tableName.equals(datasourceRequest.getTable()) && database.equalsIgnoreCase(kingbaseConfig.getSchema())) {
+                    if (tableName.equals(datasourceRequest.getTable()) && database.equalsIgnoreCase(getDatabase(datasourceRequest))) {
                         TableField tableField = getTableFiled(resultSet, datasourceRequest);
                         list.add(tableField);
                     }
@@ -179,18 +158,12 @@ public class KingbaseDsProvider extends DefaultJdbcProvider {
         return list;
     }
 
-    /**
-     * 获取数据源
-     */
     private String getDatabase(DatasourceRequest datasourceRequest) {
-        JdbcConfiguration jdbcConfiguration =
-                new Gson().fromJson(datasourceRequest.getDatasource().getConfiguration(), JdbcConfiguration.class);
+        JdbcConfiguration jdbcConfiguration = new Gson().fromJson(datasourceRequest.getDatasource().getConfiguration(), JdbcConfiguration.class);
         return jdbcConfiguration.getDataBase();
     }
 
-    /**
-     * 获取表字段
-     */
+
     private TableField getTableFiled(ResultSet resultSet, DatasourceRequest datasourceRequest) throws SQLException {
         TableField tableField = new TableField();
         String colName = resultSet.getString("COLUMN_NAME");
@@ -222,15 +195,11 @@ public class KingbaseDsProvider extends DefaultJdbcProvider {
         return tableField;
     }
 
-    /**
-     * 检验数据源状态
-     */
     @Override
     public String checkStatus(DatasourceRequest datasourceRequest) throws Exception {
         String queryStr = getTablesSql(datasourceRequest);
-        JdbcConfiguration jdbcConfiguration =
-                new Gson().fromJson(datasourceRequest.getDatasource().getConfiguration(), JdbcConfiguration.class);
-        int queryTimeout = Math.max(jdbcConfiguration.getQueryTimeout(), 0);
+        JdbcConfiguration jdbcConfiguration = new Gson().fromJson(datasourceRequest.getDatasource().getConfiguration(), JdbcConfiguration.class);
+        int queryTimeout = jdbcConfiguration.getQueryTimeout() > 0 ? jdbcConfiguration.getQueryTimeout() : 0;
         try (Connection con = getConnection(datasourceRequest); Statement statement = getStatement(con, queryTimeout); ResultSet resultSet = statement.executeQuery(queryStr)) {
         } catch (Exception e) {
             e.printStackTrace();
@@ -239,37 +208,19 @@ public class KingbaseDsProvider extends DefaultJdbcProvider {
         return "Success";
     }
 
-    /**
-     * 显示对应的表的 SQL 语句
-     */
+
     @Override
     public String getTablesSql(DatasourceRequest datasourceRequest) throws Exception {
-        KingbaseConfig kingbaseConfig = new Gson().fromJson(datasourceRequest.getDatasource().getConfiguration(),
-                KingbaseConfig.class);
-        if (StringUtils.isEmpty(kingbaseConfig.getSchema())) {
+        DmConfig dmConfig = new Gson().fromJson(datasourceRequest.getDatasource().getConfiguration(), DmConfig.class);
+        if (StringUtils.isEmpty(dmConfig.getSchema())) {
             throw new Exception("Database schema is empty.");
         }
-//        return "select a.table_name, b.comments from all_tables a, user_tab_comments b where a.table_name = b.table_name and owner=upper('OWNER') ".replaceAll("OWNER", kingbaseConfig.getSchema());
-        return "select\n" +
-                "    c.relname AS TABLE_NAME,\n" +
-                "    d.description AS REMARKS,\n" +
-                "    n.nspname AS TABLE_SCHEM,\n" +
-                "    c.relkind AS TABLE_TYPE\n" +
-                "    FROM sys_catalog.sys_namespace n, sys_catalog.sys_class c  \n" +
-                "    LEFT JOIN sys_catalog.sys_description d ON (c.oid = d.objoid AND d.objsubid = 0)  \n" +
-                "    LEFT JOIN sys_catalog.sys_class dc ON (d.classoid=dc.oid AND dc.relname='SYS_CLASS')  \n" +
-                "    LEFT JOIN sys_catalog.sys_namespace dn ON (dn.oid=dc.relnamespace AND dn.nspname='SYS_CATALOG') \n" +
-                "WHERE c.relnamespace = n.oid and c.relkind!='i' and c.relkind!='S' and c.relkind!='c' " +
-                "and n.nspname='"+kingbaseConfig.getSchema()+"'\n" +
-                "ORDER BY TABLE_TYPE,TABLE_SCHEM,TABLE_NAME";
+        return "select table_name from all_tab_comments where owner='OWNER' AND table_type = 'TABLE' ".replaceAll("OWNER", dmConfig.getSchema());
     }
 
-    /**
-     * 获取所有的用户
-     */
     @Override
     public String getSchemaSql(DatasourceRequest datasourceRequest) {
-//        return "select * from all_users";
-        return "SELECT nspname AS TABLE_SCHEM FROM sys_catalog.sys_namespace group by nspname";
+        return "select OBJECT_NAME from dba_objects where object_type='SCH'";
     }
+
 }

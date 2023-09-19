@@ -9,5 +9,6 @@
     "creator":"DATAEASE",
     "moduleName":"trino-backend",
     "require":"1.11.0",
-    "dsType":"trino"
+    "dsType":"trino",
+    "loadMybatis": true
 }

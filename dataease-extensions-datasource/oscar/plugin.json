@@ -9,5 +9,6 @@
     "creator":"DATAEASE",
     "moduleName":"oscar-backend",
     "require":"1.12.0",
-    "dsType":"oscar"
+    "dsType":"oscar",
+    "loadMybatis": true
 }
