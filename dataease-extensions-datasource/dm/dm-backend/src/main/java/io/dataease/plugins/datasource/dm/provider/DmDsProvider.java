@@ -1,4 +1,4 @@
-package io.dataease.plugins.datasource.trino.provider;
+package io.dataease.plugins.datasource.dm.provider;
 
 import com.google.gson.Gson;
 import io.dataease.plugins.common.base.domain.DeDriver;

@@ -1,4 +1,4 @@
-package io.dataease.plugins.datasource.trino.provider;
+package io.dataease.plugins.datasource.dm.provider;
 
 import io.dataease.plugins.datasource.entity.JdbcConfiguration;
 import lombok.Getter;

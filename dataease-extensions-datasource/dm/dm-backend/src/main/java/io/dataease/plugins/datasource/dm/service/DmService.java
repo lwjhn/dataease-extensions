@@ -1,4 +1,4 @@
-package io.dataease.plugins.datasource.trino.service;
+package io.dataease.plugins.datasource.dm.service;
 
 import io.dataease.plugins.common.constants.DatabaseClassification;
 import io.dataease.plugins.common.constants.DatasourceCalculationMode;

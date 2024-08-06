@@ -1,4 +1,4 @@
-package io.dataease.plugins.datasource.trino.query;
+package io.dataease.plugins.datasource.dm.query;
 
 
 

@@ -1,4 +1,4 @@
-package io.dataease.plugins.datasource.trino.query;
+package io.dataease.plugins.datasource.dm.query;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,7 +19,7 @@ import io.dataease.plugins.common.dto.sqlObj.SQLObj;
 import io.dataease.plugins.common.request.chart.ChartExtFilterRequest;
 import io.dataease.plugins.common.request.permission.DataSetRowPermissionsTreeDTO;
 import io.dataease.plugins.common.request.permission.DatasetRowPermissionsTreeItem;
-import io.dataease.plugins.datasource.trino.provider.DmConfig;
+import io.dataease.plugins.datasource.dm.provider.DmConfig;
 import io.dataease.plugins.datasource.entity.Dateformat;
 import io.dataease.plugins.datasource.entity.JdbcConfiguration;
 import io.dataease.plugins.datasource.entity.PageInfo;
